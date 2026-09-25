@@ -3,7 +3,7 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .kotlin
-.idea
+.idea/
 
 ### Eclipse ###
 .apt_generated
@@ -29,3 +29,14 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Gradle / Loom ###
+.gradle/
+build/
+run/
+
+### Voxy is All-Rights-Reserved: keep the JAR local, never commit it ###
+libs/
+
+### Local planning notes, not published ###
+.docs/

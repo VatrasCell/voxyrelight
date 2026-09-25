@@ -10,11 +10,13 @@ class ColumnRelighterTest {
     private static final int STONE = 1;
     private static final int WATER = 2;
     private static final int SLAB = 3;
+    private static final int GLASS = 4;
 
     private static final BlockClassifier CLASSIFIER = id -> switch (id) {
-        case WATER -> PASS;
-        case SLAB -> BLOCK_SELF_LIT;
-        default -> OPAQUE;
+        case WATER -> pack(PASS, 1);
+        case GLASS -> pack(PASS, 0);
+        case SLAB -> pack(BLOCK_SELF_LIT, 0);
+        default -> pack(OPAQUE, 0);
     };
 
     private static long air(int sky, int block) {
@@ -71,17 +73,58 @@ class ColumnRelighterTest {
     }
 
     @Test
-    void waterPassesAndSlabIsLitButStops() {
+    void waterAttenuatesAndSlabIsLitButStops() {
         long[][] sections = darkColumn();
         sections[0][index(1, 30, 1)] = block(WATER, 0, 0);
         sections[0][index(1, 29, 1)] = block(WATER, 0, 0);
         sections[0][index(1, 28, 1)] = block(SLAB, 0, 0);
         relight(sections, new int[2], CLASSIFIER, false, new Stats());
 
+        assertEquals(15, sky(sections, 0, 1, 31, 1));
+        assertEquals(14, sky(sections, 0, 1, 30, 1), "water attenuates by 1 per block");
+        assertEquals(13, sky(sections, 0, 1, 29, 1));
+        assertEquals(13, sky(sections, 0, 1, 28, 1), "non-full block uses its own light");
+        assertEquals(0, sky(sections, 0, 1, 27, 1));
+    }
+
+    @Test
+    void glassKeepsFullSky() {
+        long[][] sections = darkColumn();
+        sections[0][index(1, 30, 1)] = block(GLASS, 0, 0);
+        relight(sections, new int[2], CLASSIFIER, false, new Stats());
+
         assertEquals(15, sky(sections, 0, 1, 30, 1));
         assertEquals(15, sky(sections, 0, 1, 29, 1));
-        assertEquals(15, sky(sections, 0, 1, 28, 1), "non-full block uses its own light");
-        assertEquals(0, sky(sections, 0, 1, 27, 1));
+    }
+
+    @Test
+    void deepWaterReachesZeroAndStaysThere() {
+        long[][] sections = darkColumn();
+        for (int y = 31; y >= 0; y--) {
+            sections[0][index(0, y, 0)] = block(WATER, 0, 0);
+        }
+        sections[0][index(0, 31, 0)] = air(0, 0);
+        relight(sections, new int[2], CLASSIFIER, false, new Stats());
+
+        assertEquals(14, sky(sections, 0, 0, 30, 0));
+        assertEquals(1, sky(sections, 0, 0, 17, 0));
+        assertEquals(0, sky(sections, 0, 0, 16, 0));
+        assertEquals(0, sky(sections, 0, 0, 0, 0));
+    }
+
+    @Test
+    void overbrightWaterFromEarlierRepairIsDetectedWithoutForce() {
+        long[][] sections = new long[1][SIZE * SIZE * SIZE];
+        java.util.Arrays.fill(sections[0], air(15, 0));
+        for (int y = 10; y >= 0; y--) {
+            sections[0][index(4, y, 4)] = block(WATER, 15, 0);
+        }
+        var stats = new Stats();
+        relight(sections, new int[1], CLASSIFIER, false, stats);
+
+        assertEquals(1, stats.darkColumns);
+        assertEquals(14, sky(sections, 0, 4, 10, 4));
+        assertEquals(4, sky(sections, 0, 4, 0, 4));
     }
 
     @Test
@@ -115,8 +158,8 @@ class ColumnRelighterTest {
         assertEquals(0, stats.darkColumns);
 
         relight(sections, masks, CLASSIFIER, true, stats);
-        assertEquals(15, sky(sections, 0, 3, 10, 3));
-        assertEquals(15, sky(sections, 0, 3, 9, 3));
+        assertEquals(14, sky(sections, 0, 3, 10, 3));
+        assertEquals(14, sky(sections, 0, 3, 9, 3), "air below water keeps the attenuated light");
     }
 
     @Test

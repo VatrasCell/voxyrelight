@@ -19,7 +19,7 @@ jobs:
             echo "Tag ${GITHUB_REF_NAME} does not match mod_version ${version}" >&2
             exit 1
           fi
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 25

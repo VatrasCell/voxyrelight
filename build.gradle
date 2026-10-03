@@ -9,6 +9,23 @@ base {
     archivesName = project.archives_base_name
 }
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+}
+
+// Voxy is resolved from Modrinth Maven. Pass -Pvoxy_jar=<path> to build against a local JAR instead.
+def voxy = project.hasProperty('voxy_jar') ? files(project.voxy_jar) : "maven.modrinth:voxy:${project.voxy_version}"
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
@@ -16,9 +33,9 @@ dependencies {
 
     // Voxy is only needed for compiling; it is neither bundled nor redistributed.
     // MC 26.2 is unobfuscated, so compileOnly is enough (no modCompileOnly/remapping needed).
-    compileOnly files(project.voxy_jar)
+    compileOnly voxy
 
-    testImplementation files(project.voxy_jar)
+    testImplementation voxy
     testImplementation platform("org.junit:junit-bom:5.13.4")
     testImplementation "org.junit.jupiter:junit-jupiter"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"

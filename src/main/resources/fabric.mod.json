@@ -3,9 +3,14 @@
   "id": "voxyrelight",
   "version": "${version}",
   "name": "Voxy Sky-Light Repair",
-  "description": "Repairs missing sky light in existing Voxy LODs. For private use only.",
+  "description": "Repairs missing sky light in existing Voxy LODs.",
   "authors": ["VatrasCell"],
-  "license": "All-Rights-Reserved",
+  "contact": {
+    "homepage": "https://github.com/VatrasCell/voxyrelight",
+    "sources": "https://github.com/VatrasCell/voxyrelight",
+    "issues": "https://github.com/VatrasCell/voxyrelight/issues"
+  },
+  "license": "LGPL-3.0-only",
   "environment": "client",
   "entrypoints": {
     "client": ["de.vatrascell.voxyrelight.VoxyRelightClient"]
